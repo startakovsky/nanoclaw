@@ -74,7 +74,7 @@ while IFS= read -r -p "You: " line; do
       CURSOR="$BOT_TS"
       break
     fi
-    sleep 1
+    sleep 0.2
     WAITED=$((WAITED + 1))
     if [ $WAITED -ge $TIMEOUT ]; then
       echo ""

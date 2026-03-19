@@ -4,7 +4,12 @@
  * agent responses to stdout. No external services or tokens needed.
  */
 import readline from 'readline';
-import { Channel, NewMessage, OnInboundMessage, OnChatMetadata } from '../types.js';
+import {
+  Channel,
+  NewMessage,
+  OnInboundMessage,
+  OnChatMetadata,
+} from '../types.js';
 import { ASSISTANT_NAME } from '../config.js';
 import { registerChannel, ChannelOpts } from './registry.js';
 
