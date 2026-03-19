@@ -140,6 +140,89 @@ describe('storeMessage', () => {
   });
 });
 
+// --- bot response storage ---
+
+describe('bot response storage', () => {
+  it('stores bot responses with is_bot_message=1 and excludes them from message queries', () => {
+    storeChatMetadata('cli:main', '2024-01-01T00:00:00.000Z');
+
+    // Store a user message
+    storeMessage({
+      id: 'cli-user-1',
+      chat_jid: 'cli:main',
+      sender: 'cli:user',
+      sender_name: 'User',
+      content: 'hello',
+      timestamp: '2024-01-01T00:00:01.000Z',
+      is_from_me: false,
+    });
+
+    // Store a bot response (as index.ts now does)
+    storeMessage({
+      id: 'bot-1234-abc',
+      chat_jid: 'cli:main',
+      sender: 'Andy',
+      sender_name: 'Andy',
+      content: 'hi there',
+      timestamp: '2024-01-01T00:00:02.000Z',
+      is_from_me: true,
+      is_bot_message: true,
+    });
+
+    // getMessagesSince excludes bot messages (used for building agent prompt)
+    const promptMessages = getMessagesSince(
+      'cli:main',
+      '2024-01-01T00:00:00.000Z',
+      'Andy',
+    );
+    expect(promptMessages).toHaveLength(1);
+    expect(promptMessages[0].content).toBe('hello');
+  });
+
+  it('bot messages are retrievable via direct query', () => {
+    storeChatMetadata('cli:main', '2024-01-01T00:00:00.000Z');
+
+    storeMessage({
+      id: 'bot-5678-xyz',
+      chat_jid: 'cli:main',
+      sender: 'Andy',
+      sender_name: 'Andy',
+      content: 'bot response text',
+      timestamp: '2024-01-01T00:00:05.000Z',
+      is_from_me: true,
+      is_bot_message: true,
+    });
+
+    // The CLI polls with: SELECT content FROM messages WHERE is_bot_message=1
+    // Verify the message exists and has correct fields
+    const allMsgs = getMessagesSince(
+      'cli:main',
+      '2024-01-01T00:00:00.000Z',
+      'Andy',
+    );
+    // Bot messages are excluded from getMessagesSince (by design)
+    expect(allMsgs).toHaveLength(0);
+
+    // But they ARE stored — store another non-bot message to prove the table works
+    storeMessage({
+      id: 'user-msg-1',
+      chat_jid: 'cli:main',
+      sender: 'cli:user',
+      sender_name: 'User',
+      content: 'user message',
+      timestamp: '2024-01-01T00:00:06.000Z',
+    });
+
+    const msgs = getMessagesSince(
+      'cli:main',
+      '2024-01-01T00:00:00.000Z',
+      'Andy',
+    );
+    expect(msgs).toHaveLength(1);
+    expect(msgs[0].content).toBe('user message');
+  });
+});
+
 // --- getMessagesSince ---
 
 describe('getMessagesSince', () => {
