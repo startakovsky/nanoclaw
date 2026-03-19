@@ -48,7 +48,9 @@ describe('CLI channel', () => {
   });
 
   it('sendMessage writes to stdout', async () => {
-    const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const writeSpy = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
     const channel = getChannelFactory('cli')!(mockOpts)!;
     await channel.sendMessage('cli:main', 'Hello from the agent');
     expect(writeSpy).toHaveBeenCalled();
@@ -58,9 +60,14 @@ describe('CLI channel', () => {
   });
 
   it('sendMessage strips internal tags', async () => {
-    const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const writeSpy = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
     const channel = getChannelFactory('cli')!(mockOpts)!;
-    await channel.sendMessage('cli:main', '<internal>thinking</internal>Visible response');
+    await channel.sendMessage(
+      'cli:main',
+      '<internal>thinking</internal>Visible response',
+    );
     const output = writeSpy.mock.calls.map((c) => c[0]).join('');
     expect(output).toContain('Visible response');
     expect(output).not.toContain('thinking');
@@ -68,7 +75,9 @@ describe('CLI channel', () => {
   });
 
   it('sendMessage does nothing for internal-only messages', async () => {
-    const writeSpy = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const writeSpy = vi
+      .spyOn(process.stdout, 'write')
+      .mockImplementation(() => true);
     const channel = getChannelFactory('cli')!(mockOpts)!;
     await channel.sendMessage('cli:main', '<internal>only internal</internal>');
     expect(writeSpy).not.toHaveBeenCalled();

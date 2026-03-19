@@ -224,6 +224,18 @@ async function processGroupMessages(chatJid: string): Promise<boolean> {
       logger.info({ group: group.name }, `Agent output: ${raw.slice(0, 200)}`);
       if (text) {
         await channel.sendMessage(chatJid, text);
+        const botTimestamp = new Date().toISOString();
+        storeChatMetadata(chatJid, botTimestamp);
+        storeMessage({
+          id: `bot-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
+          chat_jid: chatJid,
+          sender: ASSISTANT_NAME,
+          sender_name: ASSISTANT_NAME,
+          content: text,
+          timestamp: botTimestamp,
+          is_from_me: true,
+          is_bot_message: true,
+        });
         outputSentToUser = true;
       }
       // Only reset idle timer on actual results, not session-update markers (result: null)
@@ -593,7 +605,9 @@ async function main(): Promise<void> {
     await channel.connect();
   }
   if (channels.length === 0) {
-    logger.warn('No channels connected — running headless (scheduler + IPC only)');
+    logger.warn(
+      'No channels connected — running headless (scheduler + IPC only)',
+    );
   }
 
   // Start subsystems (independently of connection handler)
@@ -617,7 +631,10 @@ async function main(): Promise<void> {
     sendMessage: (jid, text) => {
       const channel = findChannel(channels, jid);
       if (!channel) {
-        logger.warn({ jid }, 'No channel owns JID, cannot send message (headless mode?)');
+        logger.warn(
+          { jid },
+          'No channel owns JID, cannot send message (headless mode?)',
+        );
         return Promise.resolve();
       }
       return channel.sendMessage(jid, text);
